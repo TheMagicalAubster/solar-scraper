@@ -1,7 +1,9 @@
 const PORT = 8000;
 const axios = require("axios");
 const cheerio = require("cheerio");
+const { html } = require("cheerio/lib/api/manipulation");
 const express = require("express");
+const util = require('util')
 
 const app = express();
 
@@ -21,6 +23,7 @@ const providerDetails = async() => {
                 providers.push(providerUrl);
               })
       })
+      
     return providers;
   } catch(err) {
     console.log('err')
@@ -29,39 +32,37 @@ const providerDetails = async() => {
 
 const getUrls = async () => {
   const res = await providerDetails();
-
   if (res) {
-    // console.log("Got it, response is:  ", res );
     return res;
   }
 };
-
-// getUrls();
 
 const getProviders = async () => {
   const details = await getUrls();
 
   if (details) {
     details.forEach(function(item, index) {
-      // console.log(item)
       try {
         const response = 
           axios.get(item)
           .then(response => {
             const html = response.data
             const $ = cheerio.load(html)
-            // console.log(html)
             $('.providerSideBlue', html).each(function() {
-                    const providerName = $(this).find('h3').text();
-                    const providerLocation = $(this).find('p').text();
+                const providerName = $(this).find('h3').text();
+                const providerPhone = $(this).find('a').attr('href')
 
-                    providerInfo.push({
-                      providerName,
-                      providerLocation
-                    });
-                  })
-                  
-                })
+                providerInfo.push({
+                  providerName,
+                  providerPhone
+                });
+              })
+              // console.log(util.inspect(providerInfo, {showHidden: true, depth: null}));
+              console.log("------------ START ----------------------");
+              console.log(JSON.stringify(providerInfo, null, 2));
+              
+              console.log("------------ END ----------------------");
+            })
         return providerInfo;
         } catch(err) {
           console.log(err)
